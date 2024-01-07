@@ -1,19 +1,20 @@
 package br.com.itau.desafioApi.produtosDeSeguros.controllers;
 
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.model.response.ApiResponse;
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.service.ProdutoService;
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.ProdutosSeguros;
+import br.com.itau.desafioApi.produtosDeSeguros.domain.product.entity.CategoriasSeguros;
+import br.com.itau.desafioApi.produtosDeSeguros.exceptions.CategoriasNotFoundException;
+import br.com.itau.desafioApi.produtosDeSeguros.repository.CategoriasProdutosRepository;
+import br.com.itau.desafioApi.produtosDeSeguros.service.ProdutoService;
+import br.com.itau.desafioApi.produtosDeSeguros.domain.product.entity.ProdutosSeguros;
 import br.com.itau.desafioApi.produtosDeSeguros.domain.product.enums.CategoriaProduto;
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.repository.ProdutosSegurosRepository;
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.model.request.RequestCriacaoProduto;
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.model.response.ResponseCriacaoProduto;
-import jakarta.persistence.EntityNotFoundException;
+import br.com.itau.desafioApi.produtosDeSeguros.repository.ProdutosSegurosRepository;
+import br.com.itau.desafioApi.produtosDeSeguros.dto.request.RequestCriacaoProduto;
+import br.com.itau.desafioApi.produtosDeSeguros.dto.response.ResponseCriacaoProduto;
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,21 +25,17 @@ public class ProductsController {
 
     @Autowired
     private ProdutosSegurosRepository repositoryProduto;
+    @Autowired
+    private CategoriasProdutosRepository repositoryCategoriasProdutos;
 
     public ProductsController(ProdutoService produtoService) {
         this.produtoService = produtoService;
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ResponseCriacaoProduto>> CriacaoNovoProduto(@RequestBody @Valid RequestCriacaoProduto data) {
-
-        // Validação dos campos obrigatórios
+    public ResponseEntity<ResponseCriacaoProduto> CriacaoNovoProduto(@RequestBody RequestCriacaoProduto data) {
         produtoService.validarCamposObrigatorios(data);
-
-        // Criação e persistência do produto
         ProdutosSeguros novoProduto = produtoService.criarNovoProduto(data);
-
-        // Construção da resposta de sucesso
         Long novoProdutoId = novoProduto.getId();
         ResponseCriacaoProduto response = new ResponseCriacaoProduto(
                 String.valueOf(novoProdutoId),
@@ -47,8 +44,7 @@ public class ProductsController {
                 novoProduto.getPrecoBase().floatValue(),
                 novoProduto.getPrecoTarifado().floatValue()
         );
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
@@ -78,18 +74,34 @@ public class ProductsController {
 
     @PutMapping
     @Transactional
-    public ResponseEntity AtualizarProduto(@RequestBody @Valid RequestCriacaoProduto data) {
+    public ResponseEntity AtualizarProduto(@RequestBody RequestCriacaoProduto data) {
+        produtoService.validarCamposObrigatoriosEdicao(data);
+        produtoService.validarCategoriaInformada(data);
+
         Optional<ProdutosSeguros> optionalProduct = repositoryProduto.findById(data.id());
+
         if (optionalProduct.isPresent()) {
             ProdutosSeguros produtos = optionalProduct.get();
             produtos.setNome(data.nome());
             produtos.setCategoria(data.categoria());
             produtos.setPrecoBase(data.preco_base());
 
+            // Buscar a categoria correspondente ao nome da categoria no RequestCriacaoProduto
+            CategoriasSeguros categoria = repositoryCategoriasProdutos.findByCategoria(data.categoria())
+                    .orElseThrow(() -> new CategoriasNotFoundException("Categoria não encontrada: " + data.categoria()));
+
+            // Calcular o novo preço tarifado
+            BigDecimal novoPrecoTarifado = produtoService.calcularPrecoTarifado(data.preco_base(), categoria);
+            produtos.setPrecoTarifado(novoPrecoTarifado);
+
+            // Salvar as alterações
+            repositoryProduto.save(produtos);
+
             return ResponseEntity.ok(produtos);
-        } else {
-            throw new EntityNotFoundException();
         }
+
+        // Se o produto não for encontrado, você pode retornar um ResponseEntity.notFound()
+        return ResponseEntity.notFound().build();
     }
     @DeleteMapping("/{id}")
     public ResponseEntity deletarProduto(@PathVariable Integer id) {

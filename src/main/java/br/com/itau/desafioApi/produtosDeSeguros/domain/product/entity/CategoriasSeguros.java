@@ -1,4 +1,4 @@
-package br.com.itau.desafioApi.produtosDeSeguros.domain.product;
+package br.com.itau.desafioApi.produtosDeSeguros.domain.product.entity;
 
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;

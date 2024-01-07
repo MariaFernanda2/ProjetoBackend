@@ -1,6 +1,6 @@
-package br.com.itau.desafioApi.produtosDeSeguros.domain.product.repository;
+package br.com.itau.desafioApi.produtosDeSeguros.repository;
 
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.CategoriasSeguros;
+import br.com.itau.desafioApi.produtosDeSeguros.domain.product.entity.CategoriasSeguros;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

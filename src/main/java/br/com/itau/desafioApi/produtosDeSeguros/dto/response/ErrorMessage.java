@@ -1,6 +1,4 @@
-package br.com.itau.desafioApi.produtosDeSeguros.domain.product.model.response;
-
-import java.util.List;
+package br.com.itau.desafioApi.produtosDeSeguros.dto.response;
 
 public class ErrorMessage {
     private String field;

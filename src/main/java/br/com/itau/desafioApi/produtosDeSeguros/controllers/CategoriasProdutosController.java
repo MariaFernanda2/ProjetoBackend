@@ -1,9 +1,7 @@
 package br.com.itau.desafioApi.produtosDeSeguros.controllers;
 
 
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.repository.CategoriasProdutosRepository;
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.repository.ProdutosSegurosRepository;
-import br.com.itau.desafioApi.produtosDeSeguros.domain.product.service.ProdutoService;
+import br.com.itau.desafioApi.produtosDeSeguros.repository.CategoriasProdutosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

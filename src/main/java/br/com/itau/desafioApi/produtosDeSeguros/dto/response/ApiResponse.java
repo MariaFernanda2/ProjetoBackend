@@ -1,4 +1,4 @@
-package br.com.itau.desafioApi.produtosDeSeguros.domain.product.model.response;
+package br.com.itau.desafioApi.produtosDeSeguros.dto.response;
 
 import java.util.List;
 
